@@ -10,9 +10,18 @@ import android.util.AttributeSet;
 import android.view.View;
 
 import com.babcock.tictactoe.R;
+import com.babcock.tictactoe.algorithm.BoardState;
+import com.babcock.tictactoe.algorithm.ComputerPlayer;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import butterknife.BindViews;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+
+import static com.babcock.tictactoe.algorithm.BoardState.State.In_Progress;
+import static com.babcock.tictactoe.controls.TicTacToeTile.State.O;
 
 /**
  * Created by kevinbabcock on 7/17/16.
@@ -21,13 +30,23 @@ import butterknife.OnClick;
 public class TicTacToeBoard extends android.support.v7.widget.CardView {
 
     private static final String SUPER_STATE = "super_state";
-    private static final String X_MOVES = "x_moves";
-    private static final String O_MOVES = "o_moves";
+    private static final String MOVES_1 = "moves_1";
+    private static final String MOVES_2 = "moves_2";
+    private static final String MOVES_3 = "moves_3";
 
-    private int[] xMoves = new int[5];
-    private int[] oMoves = new int[4];
+    public interface Listener {
+        void onComplete(BoardState.State completionState);
+    }
 
     private Paint paint;
+    private ComputerPlayer computerPlayer;
+    private BoardState boardState;
+
+    private List<Listener> listeners;
+
+    @BindViews({ R.id.vTile1, R.id.vTile2, R.id.vTile3, R.id.vTile4,
+            R.id.vTile5, R.id.vTile6, R.id.vTile7, R.id.vTile8, R.id.vTile9 })
+    List<TicTacToeTile> tiles;
 
     public TicTacToeBoard(Context context) {
         super(context);
@@ -44,23 +63,15 @@ public class TicTacToeBoard extends android.support.v7.widget.CardView {
         init();
     }
 
-    public void init() {
-
-        inflate(getContext(), R.layout.grid_layout_board, this);
-        ButterKnife.bind(this);
-
-        paint = new Paint();
-        paint.setColor(Color.BLACK);
-        paint.setStrokeWidth(10);
-    }
-
     @Override
     public Parcelable onSaveInstanceState()
     {
         Bundle b = new Bundle();
         b.putParcelable(SUPER_STATE, super.onSaveInstanceState());
-        b.putIntArray(X_MOVES, xMoves);
-        b.putIntArray(O_MOVES, oMoves);
+        char[][] moves = boardState.getMoves();
+        b.putCharArray(MOVES_1, moves[0]);
+        b.putCharArray(MOVES_2, moves[1]);
+        b.putCharArray(MOVES_3, moves[2]);
 
         return b;
     }
@@ -71,8 +82,31 @@ public class TicTacToeBoard extends android.support.v7.widget.CardView {
         if (state instanceof Bundle) // implicit null check
         {
             Bundle b = (Bundle)state;
-            xMoves = b.getIntArray(X_MOVES);
-            oMoves = b.getIntArray(O_MOVES);
+            char[][] moves = new char[3][3];
+            moves[0] = b.getCharArray(MOVES_1);
+            moves[1] = b.getCharArray(MOVES_2);
+            moves[2] = b.getCharArray(MOVES_3);
+
+            // Replay moves onto board
+            for (int i = 0; i < 3; i++) {
+                for (int j = 0; j < 3; j++) {
+                    boardState.updateBoardState(i, j, moves[i][j]);
+                }
+            }
+
+            for (int i = 0; i < tiles.size(); i++) {
+                if (moves[i/3][i%3] == 'X') {
+                    tiles.get(i).setTileState(TicTacToeTile.State.X);
+                }
+                else if (moves[i/3][i%3] == 'O') {
+                    tiles.get(i).setTileState(O);
+                }
+            }
+
+            if (boardState.getCurrentState() != In_Progress) {
+                notifyListeners();
+            }
+
             state = b.getParcelable(SUPER_STATE);
         }
 
@@ -106,9 +140,62 @@ public class TicTacToeBoard extends android.support.v7.widget.CardView {
     public void tileClick(View v) {
         if (v instanceof TicTacToeTile) {
             TicTacToeTile tile = (TicTacToeTile) v;
+
             if (tile.getTileState() == TicTacToeTile.State.Empty) {
-                tile.setTileState(TicTacToeTile.State.O);
+                int index = tiles.indexOf(tile);
+                if (index >= 0) {
+                    boardState.updateBoardState(index/3, index%3, 'X');
+                    tile.setTileState(TicTacToeTile.State.X);
+
+                    if (boardState.getCurrentState() == In_Progress) {
+                        int nextMove = computerPlayer.nextMove(boardState.getMoves());
+                        boardState.updateBoardState(nextMove/3, nextMove%3, 'O');
+                        tiles.get(nextMove).setTileState(O);
+                    }
+
+                    if (boardState.getCurrentState() != In_Progress) {
+                        notifyListeners();
+                    }
+                }
             }
+        }
+    }
+
+    public void reset() {
+        computerPlayer = new ComputerPlayer();
+        boardState = new BoardState();
+
+        for (TicTacToeTile tile : tiles) {
+            tile.setTileState(TicTacToeTile.State.Empty);
+        }
+    }
+
+    public void addListener(Listener listener) {
+        listeners.add(listener);
+    }
+
+    public void removeListener(Listener listener) {
+        listeners.remove(listener);
+    }
+
+    private void init() {
+
+        inflate(getContext(), R.layout.grid_layout_board, this);
+        ButterKnife.bind(this);
+
+        paint = new Paint();
+        paint.setColor(Color.BLACK);
+        paint.setStrokeWidth(10);
+
+        computerPlayer = new ComputerPlayer();
+        boardState = new BoardState();
+
+        listeners = new ArrayList<>();
+    }
+
+    private void notifyListeners() {
+        for (Listener listener : listeners) {
+            listener.onComplete(boardState.getCurrentState());
         }
     }
 }

@@ -1,20 +1,33 @@
 package com.babcock.tictactoe.activity;
 
-import android.content.res.Configuration;
 import android.os.Bundle;
-import android.support.percent.PercentLayoutHelper;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
+import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import com.babcock.tictactoe.R;
+import com.babcock.tictactoe.algorithm.BoardState;
 import com.babcock.tictactoe.controls.TicTacToeBoard;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 
 public class MainActivity extends AppCompatActivity {
 
     @BindView(R.id.ticTacToeBoard)
     TicTacToeBoard ticTacToeBoard;
+
+    @BindView(R.id.llStatus)
+    LinearLayout statusLayout;
+
+    @BindView(R.id.tvStatus)
+    TextView status;
+
+    @BindView(R.id.btnReset)
+    Button reset;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,15 +36,30 @@ public class MainActivity extends AppCompatActivity {
 
         ButterKnife.bind(this);
 
-        PercentLayoutHelper.PercentLayoutParams layoutParams = (PercentLayoutHelper.PercentLayoutParams) ticTacToeBoard.getLayoutParams();
-        switch (getResources().getConfiguration().orientation) {
-            case Configuration.ORIENTATION_LANDSCAPE:
-                layoutParams.getPercentLayoutInfo().heightPercent = 1.0f;
-                break;
-            case Configuration.ORIENTATION_PORTRAIT:
-            default:
-                layoutParams.getPercentLayoutInfo().widthPercent = 1.0f;
-                break;
-        }
+        ticTacToeBoard.addListener(new TicTacToeBoard.Listener() {
+            @Override
+            public void onComplete(BoardState.State completionState) {
+                switch (completionState) {
+                    case X_Wins:
+                        status.setText("You Win");
+                        break;
+                    case O_Wins:
+                        status.setText("You Lose");
+                        break;
+                    case Cats:
+                        status.setText("CATS!!!");
+                        break;
+                }
+
+                statusLayout.setVisibility(View.VISIBLE);
+            }
+        });
+    }
+
+    @OnClick(R.id.btnReset)
+    public void reset(View v) {
+        statusLayout.setVisibility(View.INVISIBLE);
+
+        ticTacToeBoard.reset();
     }
 }
