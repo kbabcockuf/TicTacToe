@@ -1,34 +1,64 @@
 package com.babcock.tictactoe.algorithm;
 
 /**
+ * Represents the state of a TicTacToeBoard.
+ *
+ * May be used for both maintaining state and testing moves for state.
+ *
  * Created by kevinbabcock on 7/17/16.
  */
 
 public class BoardState {
 
+    /**
+     * TicTacToeBoard moves.
+     */
     private char[][] moves;
+
+    /**
+     * Current state of the board.
+     */
     private State currentState;
-    private int totalMoves;
 
     public BoardState() {
         currentState = State.In_Progress;
         moves = new char[3][3];
-        totalMoves = 0;
     }
 
-    public BoardState(char[][] moves) {
+    BoardState(char[][] moves) {
         currentState = State.In_Progress;
-        this.moves = moves;
+        this.moves = new char[3][3];
+
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                this.moves[i][j] = moves[i][j];
+            }
+        }
     }
 
+    /**
+     * Return the current state of the board.
+     * @return
+     */
     public State getCurrentState() {
         return currentState;
     }
 
+    /**
+     * Return the moves this board state represents.
+     * @return
+     */
     public char[][] getMoves() {
         return moves;
     }
 
+    /**
+     * Test the resulting state of a given move.
+     * @param row
+     * @param col
+     * @param move
+     * @return the resulting state this move would have resulted in.
+     */
     public State testBoardState(int row, int col, char move) {
         moves[row][col] = move;
         State state = checkBoardState(row, col, move);
@@ -36,9 +66,15 @@ public class BoardState {
         return state;
     }
 
+    /**
+     * Update the state of this board.
+     * @param row
+     * @param col
+     * @param move
+     * @return the resulting state.
+     */
     public State updateBoardState(int row, int col, char move) {
         moves[row][col] = move;
-        totalMoves++;
 
         currentState = checkBoardState(row, col, move);
 
@@ -116,9 +152,25 @@ public class BoardState {
             }
         }
 
-        // Check for a full board and no winner
-        if (totalMoves == 9 && newState == State.In_Progress) {
-            newState = State.Cats;
+        // Check for a full board (Draw)
+        if (newState == State.In_Progress) {
+            boolean isFull = true;
+            for (int i = 0; i < 3; i++) {
+                for (int j = 0; j < 3; j++) {
+                    if (moves[i][j] == '\u0000') {
+                        isFull = false;
+                        break;
+                    }
+                }
+
+                if (!isFull) {
+                    break;
+                }
+            }
+
+            if (isFull) {
+                newState = State.Draw;
+            }
         }
 
         return newState;
@@ -128,6 +180,6 @@ public class BoardState {
         In_Progress,
         X_Wins,
         O_Wins,
-        Cats
+        Draw
     }
 }

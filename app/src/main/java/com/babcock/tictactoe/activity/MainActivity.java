@@ -15,6 +15,11 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
+/**
+ * Host a TicTacToeBoard
+ *
+ * Created by kevinbabcock on 7/17/16.
+ */
 public class MainActivity extends AppCompatActivity {
 
     @BindView(R.id.ticTacToeBoard)
@@ -46,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
                     case O_Wins:
                         status.setText("You Lose");
                         break;
-                    case Cats:
+                    case Draw:
                         status.setText("CATS!!!");
                         break;
                 }

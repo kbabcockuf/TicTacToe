@@ -10,12 +10,14 @@ import android.view.View;
 import butterknife.ButterKnife;
 
 /**
+ * Represents a single tile on a TicTacToeBoard.
+ *
  * Created by kevinbabcock on 7/17/16.
  */
 
 public class TicTacToeTile extends View {
 
-    public enum State {
+    enum State {
         Empty,
         X,
         O
@@ -39,22 +41,19 @@ public class TicTacToeTile extends View {
         init();
     }
 
-    public void init() {
-        ButterKnife.bind(this);
-
-        tileState = State.Empty;
-
-        paint = new Paint();
-        paint.setColor(Color.BLACK);
-        paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeWidth(10);
-    }
-
-    public State getTileState() {
+    /**
+     * Get the current state of the tile.
+     * @return
+     */
+    State getTileState() {
         return tileState;
     }
 
-    public void setTileState(State tileState) {
+    /**
+     * Set the state of the tile.
+     * @param tileState
+     */
+    void setTileState(State tileState) {
         this.tileState = tileState;
 
         invalidate();
@@ -79,5 +78,16 @@ public class TicTacToeTile extends View {
                 canvas.drawCircle(width/2, height/2, width < height ? width/2-10 : height/2-10, paint);
                 break;
         }
+    }
+
+    private void init() {
+        ButterKnife.bind(this);
+
+        tileState = State.Empty;
+
+        paint = new Paint();
+        paint.setColor(Color.BLACK);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(10);
     }
 }
