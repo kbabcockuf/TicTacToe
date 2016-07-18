@@ -148,9 +148,9 @@ public class TicTacToeBoard extends android.support.v7.widget.CardView {
                     tile.setTileState(TicTacToeTile.State.X);
 
                     if (boardState.getCurrentState() == In_Progress) {
-                        int nextMove = computerPlayer.nextMove(boardState.getMoves());
-                        boardState.updateBoardState(nextMove/3, nextMove%3, 'O');
-                        tiles.get(nextMove).setTileState(O);
+                        ComputerPlayer.Move nextMove = computerPlayer.nextMove(boardState.getMoves());
+                        boardState.updateBoardState(nextMove.row, nextMove.col, 'O');
+                        tiles.get(nextMove.row*3 + nextMove.col).setTileState(O);
                     }
 
                     if (boardState.getCurrentState() != In_Progress) {

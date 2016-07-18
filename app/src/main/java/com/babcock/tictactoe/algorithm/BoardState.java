@@ -6,12 +6,19 @@ package com.babcock.tictactoe.algorithm;
 
 public class BoardState {
 
-    private char[][] moves = new char[3][3];
+    private char[][] moves;
     private State currentState;
-    private int totalMoves = 0;
+    private int totalMoves;
 
     public BoardState() {
         currentState = State.In_Progress;
+        moves = new char[3][3];
+        totalMoves = 0;
+    }
+
+    public BoardState(char[][] moves) {
+        currentState = State.In_Progress;
+        this.moves = moves;
     }
 
     public State getCurrentState() {
@@ -22,11 +29,24 @@ public class BoardState {
         return moves;
     }
 
+    public State testBoardState(int row, int col, char move) {
+        moves[row][col] = move;
+        State state = checkBoardState(row, col, move);
+        moves[row][col] = '\u0000';
+        return state;
+    }
+
     public State updateBoardState(int row, int col, char move) {
         moves[row][col] = move;
         totalMoves++;
 
-        char nullChar = '\u0000';
+        currentState = checkBoardState(row, col, move);
+
+        return currentState;
+    }
+
+    private State checkBoardState(int row, int col, char move) {
+        State newState = currentState;
         boolean isWinner;
 
         // Check for across
@@ -39,7 +59,7 @@ public class BoardState {
         }
 
         if (isWinner) {
-            currentState = move == 'X' ? State.X_Wins : State.O_Wins;
+            newState = move == 'X' ? State.X_Wins : State.O_Wins;
         }
 
         // Check for down
@@ -53,7 +73,7 @@ public class BoardState {
             }
 
             if (isWinner) {
-                currentState = move == 'X' ? State.X_Wins : State.O_Wins;
+                newState = move == 'X' ? State.X_Wins : State.O_Wins;
             }
         }
 
@@ -73,7 +93,7 @@ public class BoardState {
                     }
 
                     if (isWinner) {
-                        currentState = move == 'X' ? State.X_Wins : State.O_Wins;
+                        newState = move == 'X' ? State.X_Wins : State.O_Wins;
                     }
                 }
 
@@ -89,7 +109,7 @@ public class BoardState {
                         }
 
                         if (isWinner) {
-                            currentState = move == 'X' ? State.X_Wins : State.O_Wins;
+                            newState = move == 'X' ? State.X_Wins : State.O_Wins;
                         }
                     }
                 }
@@ -97,11 +117,11 @@ public class BoardState {
         }
 
         // Check for a full board and no winner
-        if (totalMoves == 9 && currentState == State.In_Progress) {
-            currentState = State.Cats;
+        if (totalMoves == 9 && newState == State.In_Progress) {
+            newState = State.Cats;
         }
 
-        return currentState;
+        return newState;
     }
 
     public enum State {
